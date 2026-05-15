@@ -1994,20 +1994,19 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 await update.message.reply_text(f"{msg}")
         else:
-    inviter_id = int(param)
-    if inviter_id != member_id:
-        # حفظ بيانات الإحالة مؤقتاً - لن يتم منح المكافأة الآن
-        # المكافأة ستمنح بعد التحقق من الاشتراك في القنوات الإجبارية
-        context.user_data['PENDING_REFERRAL'] = {
-            'inviter_id': inviter_id,
-            'new_member_id': member_id,
-            'processed': False
-        }
-        await update.message.reply_text(
-            f"🎁 مرحباً بك في بوت تفاعلكم!\n\n"
-            f"⚠️ للحصول على مكافأة التسجيل، يجب الاشتراك في القنوات الإجبارية أولاً\n"
-            f"ثم الضغط على زر 'تحقق من الاشتراك'"
-        )
+            inviter_id = int(param)
+            if inviter_id != member_id:
+                # حفظ بيانات الإحالة مؤقتاً
+                context.user_data['PENDING_REFERRAL'] = {
+                    'inviter_id': inviter_id,
+                    'new_member_id': member_id,
+                    'processed': False
+                }
+                await update.message.reply_text(
+                    f"🎁 مرحباً بك في بوت تفاعلكم!\n\n"
+                    f"⚠️ للحصول على مكافأة التسجيل، يجب الاشتراك في القنوات الإجبارية أولاً من فضلك\n"
+                    f"ثم الضغط على زر 'تحقق من الاشتراك'"
+              )
     
     if db._settings.get('maintenance_mode', False) and member_id != GuardianConfig.MASTER_ADMIN_ID:
         await update.message.reply_text(
