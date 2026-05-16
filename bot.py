@@ -1994,28 +1994,29 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 await update.message.reply_text(f"{msg}")
         else:
-            inviter_id = int(param)
-            if inviter_id != member_id:
-                success, msg = db.process_referral(member_id, inviter_id)
-                if success:
-                    inviter_reward = db._settings.get('inviter_reward', GuardianConfig.INVITER_REWARD_AMOUNT)
-                    invited_reward = db._settings.get('invited_reward', GuardianConfig.INVITED_REWARD_AMOUNT)
-                    
-                    try:
-                        await context.bot.send_message(
-                            chat_id=inviter_id,
-                            text=f"🎉 مبروك! تم تسجيل عضو جديد عبر رابط الإحالة الخاص بك!\n\n"
-                                 f"💰 حصلت على مكافأة {inviter_reward} IQD\n"
-                                 f"👤 العضو الجديد: @{user.username or user.first_name}"
-                        )
-                    except:
-                        pass
-                    
-                    await update.message.reply_text(
-                        f"🎁 مرحباً بك في بوت تفاعلكم الذكي!\n\n"
-                        f"💰 حصلت على مكافأة تسجيل {invited_reward} IQD\n"
-                        f"💳 رصيدك الحالي: {db.get_member(member_id).get('balance', 0)} IQD"
-                    )
+           inviter_id = int(param)
+if inviter_id != member_id:
+    # فقط نحفظ معرف الداعي بدون منح المكافأة
+    # المكافأة ستمنح بعد التحقق من الاشتراك الإجباري
+    new_member = db.get_member(member_id)
+    if not new_member.get('referral_claimed', False):
+        new_member['referred_by'] = inviter_id
+        # نخزن أن هناك مكافأة معلقة
+        new_member['pending_referral_reward'] = True
+        context.user_data['pending_inviter_id'] = inviter_id
+        db._save_database()
+        
+        await update.message.reply_text(
+            f"🎁 مرحباً بك في بوت الحارس الذكي!\n\n"
+            f"⚠️ للحصول على مكافأة التسجيل، يجب عليك أولاً الاشتراك في القنوات المطلوبة\n"
+            f"والضغط على زر 'تحقق من الاشتراك'\n\n"
+            f"بعد التحقق، ستحصل على مكافأتك تلقائياً! 💰"
+        )
+    else:
+        await update.message.reply_text(
+            f"🎁 مرحباً بك في بوت الحارس الذكي!\n\n"
+            f"💳 رصيدك الحالي: {db.get_member(member_id).get('balance', 0)} IQD"
+        )
     
     if db._settings.get('maintenance_mode', False) and member_id != GuardianConfig.MASTER_ADMIN_ID:
         await update.message.reply_text(
@@ -2161,18 +2162,62 @@ async def handle_callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await show_account_info(update, member_id)
     
     elif data == "verify_mandatory":
-        # عند الضغط على تحقق - هنا فقط يتم زيادة العداد
-        is_joined, _ = await check_mandatory_channels(member_id, context)
-        if is_joined:
-            # زيادة عداد القنوات الإجبارية
-            channels = db._settings.get('mandatory_channels', [])
-            for ch in channels:
-                db.increment_mandatory_channel_members(ch)
-            await query.edit_message_text("✅ تم التحقق من اشتراكك! أهلاً بك في البوت.")
-            await show_main_menu(update, member_id)
-        else:
-            await query.answer("❌ لم تشترك في جميع القنوات المطلوبة!", show_alert=True)
-    
+    # عند الضغط على تحقق - هنا فقط يتم زيادة العداد ومنح مكافأة الإحالة
+    is_joined, _ = await check_mandatory_channels(member_id, context)
+    if is_joined:
+        # زيادة عداد القنوات الإجبارية
+        channels = db._settings.get('mandatory_channels', [])
+        for ch in channels:
+            db.increment_mandatory_channel_members(ch)
+        
+        # ✅ منح مكافأة الإحالة المعلقة بعد التحقق من الاشتراك
+        member = db.get_member(member_id)
+        if member.get('pending_referral_reward', False):
+            inviter_id = member.get('referred_by')
+            if inviter_id and inviter_id != member_id:
+                inviter = db.get_member(inviter_id)
+                inviter_reward = db._settings.get('inviter_reward', GuardianConfig.INVITER_REWARD_AMOUNT)
+                invited_reward = db._settings.get('invited_reward', GuardianConfig.INVITED_REWARD_AMOUNT)
+                
+                # منح المكافأة للداعي
+                inviter['balance'] = inviter.get('balance', 0) + inviter_reward
+                inviter['referral_earnings'] = inviter.get('referral_earnings', 0) + inviter_reward
+                if 'referred_members' not in inviter:
+                    inviter['referred_members'] = []
+                if member_id not in inviter['referred_members']:
+                    inviter['referred_members'].append(member_id)
+                
+                # منح المكافأة للمدعو
+                member['balance'] = member.get('balance', 0) + invited_reward
+                member['referral_claimed'] = True
+                member['pending_referral_reward'] = False
+                
+                db._log_activity(inviter_id, f"حصل على {inviter_reward} IQD مكافأة إحالة")
+                db._log_activity(member_id, f"حصل على {invited_reward} IQD مكافأة تسجيل")
+                db._save_database()
+                
+                # إشعار الداعي
+                try:
+                    await context.bot.send_message(
+                        chat_id=inviter_id,
+                        text=f"🎉 مبروك! تم تسجيل عضو جديد عبر رابط الإحالة الخاص بك!\n\n"
+                             f"💰 حصلت على مكافأة {inviter_reward} IQD\n"
+                             f"👤 العضو الجديد: @{update.effective_user.username or update.effective_user.first_name}"
+                    )
+                except:
+                    pass
+                
+                await query.edit_message_text(
+                    f"✅ تم التحقق من اشتراكك!\n\n"
+                    f"🎁 مبروك! حصلت على مكافأة تسجيل {invited_reward} IQD\n"
+                    f"💰 رصيدك الحالي: {member.get('balance', 0)} IQD"
+                )
+                return
+        
+        await query.edit_message_text("✅ تم التحقق من اشتراكك! أهلاً بك في البوت.")
+        await show_main_menu(update, member_id)
+    else:
+        await query.answer("❌ لم تشترك في جميع القنوات المطلوبة!", show_alert=True)
     # ═══════════════ نظام الحماية ═══════════════
     elif data == "menu_protection_system":
         await query.edit_message_text(
