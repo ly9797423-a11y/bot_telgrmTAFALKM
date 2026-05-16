@@ -5015,6 +5015,9 @@ def main():
     main_conv = ConversationHandler(
         entry_points=[
             CommandHandler("start", cmd_start),
+            CallbackQueryHandler(handle_callbacks, pattern="^mandatory_add$"),
+            CallbackQueryHandler(handle_callbacks, pattern="^menu_transfer$"),
+            CallbackQueryHandler(handle_callbacks, pattern="^admin_gift$"),
             CallbackQueryHandler(handle_callbacks, pattern="^menu_add_channel$"),
             CallbackQueryHandler(handle_callbacks, pattern="^fund_create$"),
             CallbackQueryHandler(handle_callbacks, pattern="^order_service_"),
