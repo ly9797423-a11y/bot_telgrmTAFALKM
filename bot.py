@@ -2161,7 +2161,7 @@ async def handle_callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data == "menu_account_info":
         await show_account_info(update, member_id)
     
-    elif data == "verify_mandatory":
+   elif data == "verify_mandatory":
     # عند الضغط على تحقق - هنا فقط يتم زيادة العداد ومنح مكافأة الإحالة
     is_joined, _ = await check_mandatory_channels(member_id, context)
     if is_joined:
