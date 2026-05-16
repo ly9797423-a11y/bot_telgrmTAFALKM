@@ -5014,6 +5014,7 @@ def main():
     # إنشاء محادثة موحدة لجميع الإدخالات
     main_conv = ConversationHandler(
         entry_points=[
+            CommandHandler("start", cmd_start),
             CallbackQueryHandler(handle_callbacks, pattern="^menu_add_channel$"),
             CallbackQueryHandler(handle_callbacks, pattern="^fund_create$"),
             CallbackQueryHandler(handle_callbacks, pattern="^order_service_"),
@@ -5109,9 +5110,6 @@ def main():
         per_message=False
     )
     app.add_handler(main_conv)
-    
-    # إضافة معالج أمر البدء
-    app.add_handler(CommandHandler("start", cmd_start))
     
     # إضافة معالج الأزرار التفاعلية
     app.add_handler(CallbackQueryHandler(handle_callbacks))
