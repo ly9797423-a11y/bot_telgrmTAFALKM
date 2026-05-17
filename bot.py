@@ -1605,6 +1605,26 @@ except Exception as e:
             campaign.setdefault('completed_by', []).append(member_id)
             
             campaign['members_joined'] = campaign.get('members_joined', 0) + 1
+# إشعار لصاحب الحملة بدخول عضو جديد
+owner_id = campaign.get('owner_id')
+if owner_id:
+    try:
+        import requests
+        bot_token = GuardianConfig.BOT_TOKEN
+        requests.post(
+            f"https://api.telegram.org/bot{bot_token}/sendMessage",
+            json={
+                "chat_id": owner_id,
+                "text": (
+                    f"👋 عضو جديد انضم إلى قناتك!\n\n"
+                    f"📺 القناة: {campaign.get('channel_title', '')}\n"
+                    f"👤 العضو: {member_id}\n"
+                    f"📊 تم: {campaign['members_joined']} من {campaign.get('members_required', 0)}\n"
+                    f"🎯 متبقي: {campaign.get('members_remaining', 0)} عضو"
+                )
+            }
+        )
+    except: pass
             if campaign.get('members_remaining', 0) > 0:
                 campaign['members_remaining'] = campaign.get('members_remaining', 0) - 1
             
