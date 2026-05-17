@@ -796,6 +796,41 @@ class MegaDatabase:
             self._log_activity(inviter_id, f"💰 حصل على {inviter_reward:,} IQD مكافأة إحالة بعد تحقق المدعو")
             self._log_activity(new_member_id, f"🎁 حصل على {invited_reward:,} IQD مكافأة تسجيل بعد التحقق")
             self._save_database()
+            # محاولة إرسال إشعار للداعي
+try:
+    import requests
+    bot_token = GuardianConfig.BOT_TOKEN
+    
+    # إشعار للداعي
+    requests.post(
+        f"https://api.telegram.org/bot{bot_token}/sendMessage",
+        json={
+            "chat_id": inviter_id,
+            "text": (
+                f"🎉 مبروك! تم تفعيل مكافأة الإحالة الخاصة بك!\n\n"
+                f"💰 المكافأة: {inviter_reward:,} IQD\n"
+                f"💳 رصيدك الحالي: {inviter.get('balance', 0):,} IQD\n\n"
+                f"📊 تمت إضافة المكافأة بعد تحقق العضو الجديد واشتراكه في القنوات.\n"
+                f"استمر في دعوة أصدقائك للربح أكثر! 🔗"
+            )
+        }
+    )
+    
+    # إشعار للعضو الجديد
+    requests.post(
+        f"https://api.telegram.org/bot{bot_token}/sendMessage",
+        json={
+            "chat_id": new_member_id,
+            "text": (
+                f"🎁 مبروك! حصلت على مكافأة التسجيل!\n\n"
+                f"💰 المكافأة: {invited_reward:,} IQD\n"
+                f"💳 رصيدك الحالي: {new_member.get('balance', 0):,} IQD\n\n"
+                f"🎯 يمكنك الآن استخدام البوت والاستفادة من جميع المميزات."
+            )
+        }
+    )
+except Exception as e:
+    logger.error(f"❌ فشل إرسال إشعارات الإحالة: {e}")
         
     def get_referral_link(self, member_id: int) -> str:
         """إنشاء رابط الإحالة الخاص بالعضو لمشاركته مع الأصدقاء"""
