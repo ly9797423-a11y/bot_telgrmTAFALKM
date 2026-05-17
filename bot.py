@@ -5015,6 +5015,14 @@ def main():
     main_conv = ConversationHandler(
         entry_points=[
             CommandHandler("start", cmd_start),
+            CallbackQueryHandler(handle_callbacks, pattern="^mandatory_add$"),
+            CallbackQueryHandler(handle_callbacks, pattern="^admin_gift$"),
+            CallbackQueryHandler(handle_callbacks, pattern="^admin_charge_all$"),
+            CallbackQueryHandler(handle_callbacks, pattern="^admin_deduct_all$"),
+            CallbackQueryHandler(handle_callbacks, pattern="^reward_inviter$"),
+            CallbackQueryHandler(handle_callbacks, pattern="^reward_invited$"),
+            CallbackQueryHandler(handle_callbacks, pattern="^reward_subscribe$"),
+            CallbackQueryHandler(handle_callbacks, pattern="^reward_funding$"),
             CallbackQueryHandler(handle_callbacks, pattern="^menu_add_channel$"),
             CallbackQueryHandler(handle_callbacks, pattern="^fund_create$"),
             CallbackQueryHandler(handle_callbacks, pattern="^order_service_"),
@@ -5040,8 +5048,6 @@ def main():
             CallbackQueryHandler(handle_callbacks, pattern="^admin_delete_member$"),
             CallbackQueryHandler(handle_callbacks, pattern="^admin_promote$"),
             CallbackQueryHandler(handle_callbacks, pattern="^admin_demote$"),
-            CallbackQueryHandler(handle_callbacks, pattern="^mandatory_add$"),
-            CallbackQueryHandler(handle_callbacks, pattern="^admin_gift$"),
             CallbackQueryHandler(handle_callbacks, pattern="^admin_add_category$"),
             CallbackQueryHandler(handle_callbacks, pattern="^add_srv_to_"),
             CallbackQueryHandler(handle_callbacks, pattern="^edit_btn_"),
