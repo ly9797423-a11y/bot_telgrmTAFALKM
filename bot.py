@@ -5040,6 +5040,8 @@ def main():
             CallbackQueryHandler(handle_callbacks, pattern="^admin_delete_member$"),
             CallbackQueryHandler(handle_callbacks, pattern="^admin_promote$"),
             CallbackQueryHandler(handle_callbacks, pattern="^admin_demote$"),
+            CallbackQueryHandler(handle_callbacks, pattern="^mandatory_add$"),
+            CallbackQueryHandler(handle_callbacks, pattern="^admin_gift$"),
             CallbackQueryHandler(handle_callbacks, pattern="^admin_add_category$"),
             CallbackQueryHandler(handle_callbacks, pattern="^add_srv_to_"),
             CallbackQueryHandler(handle_callbacks, pattern="^edit_btn_"),
@@ -5125,9 +5127,7 @@ def main():
         handle_channel_updates,
         ChatMemberHandler.CHAT_MEMBER | ChatMemberHandler.MY_CHAT_MEMBER
     ))
-    app.add_handler(CallbackQueryHandler(handle_callbacks, pattern="^mandatory_add$"))
     app.add_handler(CallbackQueryHandler(handle_callbacks, pattern="^menu_transfer$"))
-    app.add_handler(CallbackQueryHandler(handle_callbacks, pattern="^admin_gift$"))
     
     # إضافة المهمة المجدولة لفحص VIP
     if app.job_queue:
