@@ -5015,9 +5015,6 @@ def main():
     main_conv = ConversationHandler(
         entry_points=[
             CommandHandler("start", cmd_start),
-            CallbackQueryHandler(handle_callbacks, pattern="^mandatory_add$"),
-            CallbackQueryHandler(handle_callbacks, pattern="^menu_transfer$"),
-            CallbackQueryHandler(handle_callbacks, pattern="^admin_gift$"),
             CallbackQueryHandler(handle_callbacks, pattern="^menu_add_channel$"),
             CallbackQueryHandler(handle_callbacks, pattern="^fund_create$"),
             CallbackQueryHandler(handle_callbacks, pattern="^order_service_"),
@@ -5128,6 +5125,9 @@ def main():
         handle_channel_updates,
         ChatMemberHandler.CHAT_MEMBER | ChatMemberHandler.MY_CHAT_MEMBER
     ))
+    app.add_handler(CallbackQueryHandler(handle_callbacks, pattern="^mandatory_add$"))
+    app.add_handler(CallbackQueryHandler(handle_callbacks, pattern="^menu_transfer$"))
+    app.add_handler(CallbackQueryHandler(handle_callbacks, pattern="^admin_gift$"))
     
     # إضافة المهمة المجدولة لفحص VIP
     if app.job_queue:
