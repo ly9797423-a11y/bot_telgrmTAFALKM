@@ -3559,21 +3559,28 @@ async def handle_callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         
         for order in pending_orders[:1]:
-            user = db.get_member(order['user_id'])
-            service = db._services.get(order['service_id'], {})
-            category = db._service_categories.get(order.get('category_id', ''), {})
+user = db.get_member(order.get('user_id', 0))
+if not user or not isinstance(user, dict):
+    user = {'display_name': 'مستخدم غير معروف', 'username': ''}
+service = db._services.get(order.get('service_id', ''), {})
+if not service:
+    service = {'price_per_1000': 0}
+category = db._service_categories.get(order.get('category_id', ''), {})
+if not category:
+    category = {'name': 'قسم غير معروف'}
             
-            text = f"""
-📝 طلب خدمة جديد بانتظار المراجعة
+text = f"""
+📝 طلب خدمة جديد
 
-🆔 رقم الطلب: `{order['order_id']}`
-👤 المستخدم: {user.get('display_name', '')} (@{user.get('username', 'بدون')})
-🆔 ايدي المستخدم: `{order['user_id']}`
+🆔 رقم الطلب: {order.get('order_id', '')}
+👤 المستخدم: {user.get('display_name', 'غير معروف')} (@{user.get('username', 'بدون')})
+🆔 ايدي المستخدم: {order.get('user_id', '')}
 📁 القسم: {category.get('name', 'غير معروف')}
-📌 الخدمة: {order.get('service_name', '')}
-📊 الكمية المطلوبة: {order['quantity']}
-💰 التكلفة الإجمالية: {order['total_cost']:,} IQD
-🔗 الرابط المرفق: {order.get('link', 'غير مطلوب')}
+📌 الخدمة: {order.get('service_name', 'غير معروف')}
+📊 الكمية: {order.get('quantity', 0)}
+💰 السعر لكل 1000: {service.get('price_per_1000', 0)} IQD
+💵 التكلفة الإجمالية: {order.get('total_cost', 0)} IQD
+🔗 الرابط: {order.get('link', 'غير مطلوب')}
 📅 تاريخ الطلب: {order.get('created_at', '')}
 """
             keyboard = [
